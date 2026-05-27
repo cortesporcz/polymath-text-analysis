@@ -1,5 +1,4 @@
 source("scripts/01_setup_packages.R")
-
 texts <- tibble(
   author = c("Khaldun", "Goethe", "Humboldt", "Somerville"),
   file = c(
@@ -34,5 +33,3 @@ all_texts <- texts %>%
 write_csv(all_texts, "data_clean/all_clean_texts.csv")
 
 cat("Saved cleaned texts to data_clean/all_clean_texts.csv\n")
-source("scripts/05_theme_analysis.R")
-

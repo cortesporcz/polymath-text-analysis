@@ -1,3 +1,6 @@
+cat("Current working directory:\n")
+print(getwd())
+
 # Install and load packages
 
 packages <- c(
