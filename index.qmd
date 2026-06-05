@@ -18,12 +18,13 @@ This Quarto notebook introduces basic computational text analysis using R. I use
   \
   To analyze, I followed these steps in order to get the results.\
   \
-  1) Load Packages\
-  2) Load text files\
-  3) Tokenize text\
-  4) Remove stop words\
-  5) Count word frequencies\
-  6) Visualize recurring themes
+
+  1)  Load Packages\
+  2)  Load text files\
+  3)  Tokenize text\
+  4)  Remove stop words\
+  5)  Count word frequencies\
+  6)  Visualize recurring themes
 
 ## 1) Load Packages
 
@@ -133,7 +134,7 @@ ggplot(
 
 ## 8) Interpretive Questions over the actual research.
 
-Discussion questions: \
+Discussion questions:\
 
 1.  Which words dominate each text?
 2.  Are there shared vocabularies among these authors?
