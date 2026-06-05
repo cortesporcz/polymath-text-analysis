@@ -1,0 +1,142 @@
+---
+title: "Computational Text Analysis"
+format: html
+editor: visual
+---
+
+## Introduction
+
+This Quarto notebook introduces basic computational text analysis using R. I used Project Gutenberg to gather the texts. I analyzed four polymath texts:
+
+- Goethe, Theory of Colours
+
+- Humboldt, Cosmos
+
+- Mary Somerville, Connection of the Physical Sciences
+
+- Ibn Khaldun, Muqaddimah\
+  \
+  To analyze, I followed these steps in order to get the results.\
+  \
+  1) Load Packages\
+  2) Load text files\
+  3) Tokenize text\
+  4) Remove stop words\
+  5) Count word frequencies\
+  6) Visualize recurring themes
+
+## 1) Load Packages
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code.
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(readr)
+library(stringr)
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed
+
+## 2) Load Texts
+
+The texts have already been downloaded from Project Gutenberg and stored in the data_raw folder.
+
+```{r}
+goethe <- read_file("data_raw/goethe_colours.txt")
+
+humboldt <- read_file("data_raw/humboldt_cosmos_vol1.txt")
+
+somerville <- read_file("data_raw/somerville_connexion.txt")
+
+muqaddimah <- read_file("data_raw/muqaddimah_FINAL.txt")
+```
+
+## 3) Create a Data Frame
+
+Combine Texts
+
+To compare authors, we first place all texts into a single table.
+
+```{r}
+texts <- tibble(
+  author = c(
+    "Goethe",
+    "Humboldt",
+    "Somerville",
+    "Ibn Khaldun"
+  ),
+  text = c(
+    goethe,
+    humboldt,
+    somerville,
+    muqaddimah
+  )
+)
+```
+
+## 4) Tokenize Texts
+
+Tokenization breaks a text into individual words.
+
+```{r}
+words <- texts %>%
+  unnest_tokens(word, text)
+```
+
+## 5) Remove Stop Words
+
+Words such as "the", "and", and "of" occur frequently but often add little analytical value.
+
+```{r}
+data("stop_words")
+
+words_clean <- words %>%
+  anti_join(stop_words, by = "word")
+```
+
+## 6) Count Word Frequencies
+
+This will count the most common words and how often they are used throughout the whole text.
+
+```{r}
+top_words <- words_clean %>%
+  count(author, word, sort = TRUE) %>%
+  group_by(author) %>%
+  slice_head(n = 10)
+```
+
+## 7) Visualize recurring themes (images)
+
+This is how we see all of the computational text analysis in action - with images of graphs and charts.
+
+```{r}
+ggplot(
+  top_words,
+  aes(
+    x = reorder(word, n),
+    y = n,
+    fill = author
+  )
+) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~author, scales = "free")
+```
+
+## 8) Interpretive Questions over the actual research.
+
+Discussion questions: \
+
+1.  Which words dominate each text?
+2.  Are there shared vocabularies among these authors?
+3.  Which authors appear more concerned with nature?
+4.  Which authors appear more concerned with society or history?
+5.  What are the limitations of word-frequency analysis?
