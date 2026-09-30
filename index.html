@@ -2,20 +2,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Computational Text Analysis</title>
+<title>Digital Humanities Text Analysis</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -68,10 +71,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="index_files/libs/quarto-html/anchor.min.js"></script>
 <link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="index_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="index_files/libs/bootstrap/bootstrap-efbb37e9afcc02144ebbc7afd12a776f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="index_files/libs/bootstrap/bootstrap-215b371544c282197b31c8aa00ce3677.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -84,7 +87,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Computational Text Analysis</h1>
+<h1 class="title">Digital Humanities Text Analysis</h1>
 </div>
 
 
@@ -103,156 +106,320 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>This Quarto notebook introduces basic computational text analysis using R. I used Project Gutenberg to gather the texts. I analyzed four polymath texts:</p>
+<p>This Quarto notebook introduces basic text analysis workflow using four texts from my Polymath project. I used Project Gutenberg to gather the texts. The goal is not to learn every part of R syntax. Instead, we will follow what happens to a text as it moves through a text analysis workflow. Below are the four texts used:</p>
 <ul>
-<li><p>Goethe, Theory of Colours</p></li>
-<li><p>Humboldt, Cosmos</p></li>
-<li><p>Mary Somerville, Connection of the Physical Sciences</p></li>
-<li><p>Ibn Khaldun, Muqaddimah<br>
+<li><p>Johann Wolfgang von Goethe, Theory of Colours</p></li>
+<li><p>Alexander von Humboldt, Cosmos</p></li>
+<li><p>Mary Somerville, Connexion of the Physical Sciences</p></li>
+<li><p>Ibn Khaldun, The Muqaddimah<br>
 <br>
 To analyze, I followed these steps in order to get the results.<br>
 <br>
 </p>
 <ol type="1">
-<li>Load Packages<br>
-</li>
-<li>Load text files<br>
-</li>
-<li>Tokenize text<br>
-</li>
-<li>Remove stop words<br>
-</li>
-<li>Count word frequencies<br>
-</li>
+<li>Load Packages</li>
+<li>Load text files</li>
+<li>Organized the files</li>
+<li>Tokenize text</li>
+<li>Remove stop words</li>
+<li>Count word frequencies</li>
 <li>Visualize recurring themes</li>
+<li>Interpret the data
+<ol type="1">
+<li>When interpreting the data, the question I asked is what patterns can analysis help us notice, and what do we still need to return to the original text to understand?</li>
+</ol></li>
 </ol></li>
 </ul>
 </section>
 <section id="load-packages" class="level2">
 <h2 class="anchored" data-anchor-id="load-packages">1) Load Packages</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code.</p>
+<p>R Packages add tools for particular kinds of tasks.<br>
+For this project, we are using packages for working with data, reading text, cleaning text, text analysis, and visualization. Remember to load the tools before trying to execute the code to perform the analysis. tidyverse works with data and visualization and tidytext is specifically for text analysis</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-✔ dplyr     1.1.4     ✔ readr     2.1.6
-✔ forcats   1.0.0     ✔ stringr   1.6.0
-✔ ggplot2   4.0.0     ✔ tibble    3.3.1
-✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-✔ purrr     1.2.1     
+✔ dplyr     1.2.1     ✔ readr     2.2.0
+✔ forcats   1.0.1     ✔ stringr   1.6.0
+✔ ggplot2   4.0.3     ✔ tibble    3.3.1
+✔ lubridate 1.9.5     ✔ tidyr     1.3.2
+✔ purrr     1.2.2     
 ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()
 ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidytext)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidytext)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>You can add options to executable code like this</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
-</div>
-</div>
-<p>The <code>echo: false</code> option disables the printing of code (only output is displayed</p>
 </section>
 <section id="load-texts" class="level2">
 <h2 class="anchored" data-anchor-id="load-texts">2) Load Texts</h2>
-<p>The texts have already been downloaded from Project Gutenberg and stored in the data_raw folder.</p>
+<p>The texts have already been downloaded from Project Gutenberg and stored as plain-text files in the data_raw folder. What this code is doing is asking R to read each file and store its contents.<br>
+File organization is important in understanding or finding the correct files. I had certain versions of the Humbolt and Muqaddimah, so I labeled them with ’ vol1’ and ‘FINAL’.</p>
+<p>The substr command shows me the first 500 characters of the text.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>goethe <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/goethe_colours.txt"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>humboldt <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/humboldt_cosmos_vol1.txt"</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>somerville <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/somerville_connexion.txt"</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>muqaddimah <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/muqaddimah_FINAL.txt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>goethe <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/goethe_colours.txt"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">substr</span>(goethe, <span class="dv">1</span>, <span class="dv">500</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The Project Gutenberg eBook of Goethe's Theory of Colours\r\n    \r\nThis eBook is for the use of anyone anywhere in the United States and\r\nmost other parts of the world at no cost and with almost no restrictions\r\nwhatsoever. You may copy it, give it away or re-use it under the terms\r\nof the Project Gutenberg License included with this eBook or online\r\nat www.gutenberg.org. If you are not located in the United States,\r\nyou will have to check the laws of the country where you are located\r\nbefore usin"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>humboldt <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/humboldt_cosmos_vol1.txt"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>somerville <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/somerville_connexion.txt"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>muqaddimah <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/muqaddimah_FINAL.txt"</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>al_biruni <span class="ot">&lt;-</span> <span class="fu">read_file</span>(<span class="st">"data_raw/al_biruni_india_vol1.txt"</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">substr</span>(al_biruni, <span class="dv">1</span>, <span class="dv">500</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The Project Gutenberg eBook of Alberuni's India (Volume 1 of 2)\r\n    \r\nThis eBook is for the use of anyone anywhere in the United States and\r\nmost other parts of the world at no cost and with almost no restrictions\r\nwhatsoever. You may copy it, give it away or re-use it under the terms\r\nof the Project Gutenberg License included with this eBook or online\r\nat www.gutenberg.org. If you are not located in the United States,\r\nyou will have to check the laws of the country where you are located\r\nbefor"</code></pre>
+</div>
 </div>
 </section>
-<section id="create-a-data-frame" class="level2">
-<h2 class="anchored" data-anchor-id="create-a-data-frame">3) Create a Data Frame</h2>
+<section id="building-the-corpus-putting-texts-together" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-corpus-putting-texts-together">3) Building the Corpus (Putting texts together)</h2>
 <p>Combine Texts</p>
-<p>To compare authors, we first place all texts into a single table.</p>
+<p>To compare the authors’ works, we created a table that connects each author with their text. After we run this tibble() code, the texts can be analyzed together while keeping track of which words belong to which author.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>texts <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">author =</span> <span class="fu">c</span>(</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Goethe"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Humboldt"</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Somerville"</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Ibn Khaldun"</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">text =</span> <span class="fu">c</span>(</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    goethe,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    humboldt,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    somerville,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    muqaddimah</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>texts <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">author =</span> <span class="fu">c</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Goethe"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Humboldt"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Somerville"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Ibn Khaldun"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Al-Biruni"</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">text =</span> <span class="fu">c</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    goethe,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    humboldt,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    somerville,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    muqaddimah,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    al_biruni</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>texts</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 2
+  author      text                                                              
+  &lt;chr&gt;       &lt;chr&gt;                                                             
+1 Goethe      "The Project Gutenberg eBook of Goethe's Theory of Colours\r\n   …
+2 Humboldt    "The Project Gutenberg eBook of Cosmos: A Sketch of the Physical …
+3 Somerville  "The Project Gutenberg eBook of On the Connexion of the Physical …
+4 Ibn Khaldun "the excellence of historiography. an appreciation of the various…
+5 Al-Biruni   "The Project Gutenberg eBook of Alberuni's India (Volume 1 of 2)\…</code></pre>
+</div>
 </div>
 </section>
 <section id="tokenize-texts" class="level2">
 <h2 class="anchored" data-anchor-id="tokenize-texts">4) Tokenize Texts</h2>
-<p>Tokenization breaks a text into individual words.</p>
+<p>Tokenization breaks text into smaller units called ‘tokens’. Here, each token is a word -<br>
+For example: ‘Nature is a living whole’ becomes:<br>
+nature<br>
+is<br>
+a<br>
+living<br>
+whole</p>
+<p>Breaking the text apart allows R to count and compare individual words. The words(language) are being turned into data that can be counted.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>words <span class="ot">&lt;-</span> texts <span class="sc">%&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_tokens</span>(word, text)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>words <span class="ot">&lt;-</span> texts <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_tokens</span>(word, text)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(words, <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 2
+   author word     
+   &lt;chr&gt;  &lt;chr&gt;    
+ 1 Goethe the      
+ 2 Goethe project  
+ 3 Goethe gutenberg
+ 4 Goethe ebook    
+ 5 Goethe of       
+ 6 Goethe goethe's 
+ 7 Goethe theory   
+ 8 Goethe of       
+ 9 Goethe colours  
+10 Goethe this     </code></pre>
 </div>
+</div>
+<p>This is the point where we’re really turning the books into analyzable data. unnest_tokens() breaks the text into individual words. And head() simply allows us to look at the first ten rows of the result.</p>
 </section>
 <section id="remove-stop-words" class="level2">
 <h2 class="anchored" data-anchor-id="remove-stop-words">5) Remove Stop Words</h2>
-<p>Words such as “the”, “and”, and “of” occur frequently but often add little analytical value.</p>
+<p>Words such as “the”, “and”, “of”, “to” and “in” occur frequently but often add little value for analysis. For this analysis, we remove common stop words so other vocabulary becomes easier to see.<br>
+<br>
+This is a researcher decision based on the choice of the texts being studied and the researcher. Removing stop words is a methodological choice. Some common words may matter, depending on the context.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"stop_words"</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>words_clean <span class="ot">&lt;-</span> words <span class="sc">%&gt;%</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(stop_words, <span class="at">by =</span> <span class="st">"word"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"stop_words"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>words_clean <span class="ot">&lt;-</span> words <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(stop_words, <span class="at">by =</span> <span class="st">"word"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="normalize-variations-of-certain-words" class="level2">
+<h2 class="anchored" data-anchor-id="normalize-variations-of-certain-words">6) Normalize variations of certain words</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>words_clean <span class="ot">&lt;-</span> words_clean <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">word =</span> <span class="fu">case_when</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      word <span class="sc">%in%</span> <span class="fu">c</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"colour"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"colours"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"coloured"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"color"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"colors"</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"colored"</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">~</span> <span class="st">"colour"</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> word</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>R doesn’t understand that colour, colours, coloured, and the American spelling ‘color’ are related concepts. To R, they’re simply different strings of characters. For my research question, I’m more interested in references to the concept of colour or color, rather than differences between these grammatical forms or spellings. So, I’m telling R to treat these variants as one term: colour. This is called <strong>‘normalization’.</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>words_clean <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(word <span class="sc">==</span> <span class="st">"colour"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(author, word)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 3
+  author      word       n
+  &lt;chr&gt;       &lt;chr&gt;  &lt;int&gt;
+1 Al-Biruni   colour    32
+2 Goethe      colour  1381
+3 Humboldt    colour    45
+4 Ibn Khaldun colour    29
+5 Somerville  colour   358</code></pre>
+</div>
 </div>
 </section>
 <section id="count-word-frequencies" class="level2">
-<h2 class="anchored" data-anchor-id="count-word-frequencies">6) Count Word Frequencies</h2>
-<p>This will count the most common words and how often they are used throughout the whole text.</p>
+<h2 class="anchored" data-anchor-id="count-word-frequencies">7) Count Word Frequencies</h2>
+<p>Which words appear most frequently for each author after stop words are removed?<br>
+This will count the most common words and how often they are used throughout the whole text. This code groups the words by author, counts them, sorts them, and keeps the ten most frequent. There are 3 lexicons that tidytext uses.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>top_words <span class="ot">&lt;-</span> words_clean <span class="sc">%&gt;%</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(author, word, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(author) <span class="sc">%&gt;%</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(stop_words, <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 2
+   word        lexicon
+   &lt;chr&gt;       &lt;chr&gt;  
+ 1 a           SMART  
+ 2 a's         SMART  
+ 3 able        SMART  
+ 4 about       SMART  
+ 5 above       SMART  
+ 6 according   SMART  
+ 7 accordingly SMART  
+ 8 across      SMART  
+ 9 actually    SMART  
+10 after       SMART  </code></pre>
 </div>
-</section>
-<section id="visualize-recurring-themes-images" class="level2">
-<h2 class="anchored" data-anchor-id="visualize-recurring-themes-images">7) Visualize recurring themes (images)</h2>
-<p>This is how we see all of the computational text analysis in action - with images of graphs and charts.</p>
+</div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  top_words,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">reorder</span>(word, n),</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> n,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> author</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>author, <span class="at">scales =</span> <span class="st">"free"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>words_clean <span class="ot">&lt;-</span> words <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(stop_words, <span class="at">by =</span> <span class="st">"word"</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(words_clean, <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 2
+   author word     
+   &lt;chr&gt;  &lt;chr&gt;    
+ 1 Goethe project  
+ 2 Goethe gutenberg
+ 3 Goethe ebook    
+ 4 Goethe goethe's 
+ 5 Goethe theory   
+ 6 Goethe colours  
+ 7 Goethe ebook    
+ 8 Goethe united   
+ 9 Goethe world    
+10 Goethe cost     </code></pre>
+</div>
+</div>
+<p>stop_words is an existing list of common words. anti_join() tells R to keep our words except the ones that appear on this stop-word list.</p>
+</section>
+<section id="turn-counts-into-a-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="turn-counts-into-a-visualization">8) Turn Counts Into a Visualization</h2>
+<p>This is how we see all of the text analysis in action - with images of graphs and charts. A table of hundreds of word counts cn be difficult to interpret. A visualization makes some patterns easier to notice.<br>
+<br>
+After we run the code, what is noticed before it is interpreted?<br>
+Some questions to think about are:<br>
+What words stand out?<br>
+What seems different between authors?<br>
+What surprises you?<br>
+What you you want to investigate further?<br>
+</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>word_counts <span class="ot">&lt;-</span> words_clean <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(author, word, <span class="at">sort =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(word_counts, <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 3
+   author      word        n
+   &lt;chr&gt;       &lt;chr&gt;   &lt;int&gt;
+ 1 Somerville  light     925
+ 2 Ibn Khaldun people    709
+ 3 Somerville  earth     665
+ 4 Somerville  heat      664
+ 5 Somerville  sun       660
+ 6 Ibn Khaldun dynasty   647
+ 7 Goethe      colours   596
+ 8 Al-Biruni   i.e       568
+ 9 Goethe      colour    555
+10 Goethe      light     529</code></pre>
+</div>
+</div>
+<p>count() counts how often each word appears for each author</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>top_words <span class="ot">&lt;-</span> word_counts <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(author) <span class="sc">%&gt;%</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(n, <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>top_words</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 50 × 3
+# Groups:   author [5]
+   author    word       n
+   &lt;chr&gt;     &lt;chr&gt;  &lt;int&gt;
+ 1 Al-Biruni i.e      568
+ 2 Al-Biruni called   361
+ 3 Al-Biruni hindus   308
+ 4 Al-Biruni time     297
+ 5 Al-Biruni earth    280
+ 6 Al-Biruni people   280
+ 7 Al-Biruni book     276
+ 8 Al-Biruni 1        253
+ 9 Al-Biruni world    223
+10 Al-Biruni day      209
+# ℹ 40 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_words,<span class="fu">aes</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">reorder</span>(word, n),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> n,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> author</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>author, <span class="at">scales =</span> <span class="st">"free"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 </section>
-<section id="interpretive-questions-over-the-actual-research." class="level2">
-<h2 class="anchored" data-anchor-id="interpretive-questions-over-the-actual-research.">8) Interpretive Questions over the actual research.</h2>
-<p>Discussion questions:<br>
-</p>
+<section id="take-patterns-and-go-back-to-the-text" class="level2">
+<h2 class="anchored" data-anchor-id="take-patterns-and-go-back-to-the-text">9) Take patterns and go back to the text</h2>
+<p>Text analysis can identify patterns, however, a frequency count doesn’t discuss what words mean in context.<br>
+<br>
+I created questions that I think I would ask or discuss with the texts to continue the inquiry:</p>
 <ol type="1">
-<li>Which words dominate each text?</li>
 <li>Are there shared vocabularies among these authors?</li>
 <li>Which authors appear more concerned with nature?</li>
 <li>Which authors appear more concerned with society or history?</li>
 <li>What are the limitations of word-frequency analysis?</li>
+<li>How might translations affect patterns?</li>
 </ol>
 </section>
 

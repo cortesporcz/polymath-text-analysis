@@ -1,70 +1,70 @@
 ---
-title: "Computational Text Analysis"
+title: "Digital Humanities Text Analysis"
 format: html
 editor: visual
 ---
 
 ## Introduction
 
-This Quarto notebook introduces basic computational text analysis using R. I used Project Gutenberg to gather the texts. I analyzed four polymath texts:
+This Quarto notebook introduces basic text analysis workflow using four texts from my Polymath project. I used Project Gutenberg to gather the texts. The goal is not to learn every part of R syntax. Instead, we will follow what happens to a text as it moves through a text analysis workflow. Below are the four texts used:
 
-- Goethe, Theory of Colours
+- Johann Wolfgang von Goethe, Theory of Colours
 
-- Humboldt, Cosmos
+- Alexander von Humboldt, Cosmos
 
-- Mary Somerville, Connection of the Physical Sciences
+- Mary Somerville, Connexion of the Physical Sciences
 
-- Ibn Khaldun, Muqaddimah\
+- Ibn Khaldun, The Muqaddimah\
   \
   To analyze, I followed these steps in order to get the results.\
   \
 
-  1)  Load Packages\
-  2)  Load text files\
-  3)  Tokenize text\
-  4)  Remove stop words\
-  5)  Count word frequencies\
-  6)  Visualize recurring themes
+  1)  Load Packages
+  2)  Load text files
+  3)  Organized the files
+  4)  Tokenize text
+  5)  Remove stop words
+  6)  Count word frequencies
+  7)  Visualize recurring themes
+  8)  Interpret the data
+      1)  When interpreting the data, the question I asked is what patterns can analysis help us notice, and what do we still need to return to the original text to understand?
 
 ## 1) Load Packages
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code.
+R Packages add tools for particular kinds of tasks.\
+For this project, we are using packages for working with data, reading text, cleaning text, text analysis, and visualization. Remember to load the tools before trying to execute the code to perform the analysis. tidyverse works with data and visualization and tidytext is specifically for text analysis
 
 ```{r}
 library(tidyverse)
 library(tidytext)
-library(readr)
-library(stringr)
 ```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed
 
 ## 2) Load Texts
 
-The texts have already been downloaded from Project Gutenberg and stored in the data_raw folder.
+The texts have already been downloaded from Project Gutenberg and stored as plain-text files in the data_raw folder. What this code is doing is asking R to read each file and store its contents.\
+File organization is important in understanding or finding the correct files. I had certain versions of the Humbolt and Muqaddimah, so I labeled them with ' vol1' and 'FINAL'.
+
+The substr command shows me the first 500 characters of the text.
 
 ```{r}
 goethe <- read_file("data_raw/goethe_colours.txt")
+substr(goethe, 1, 500)
 
 humboldt <- read_file("data_raw/humboldt_cosmos_vol1.txt")
 
 somerville <- read_file("data_raw/somerville_connexion.txt")
 
 muqaddimah <- read_file("data_raw/muqaddimah_FINAL.txt")
+
+al_biruni <- read_file("data_raw/al_biruni_india_vol1.txt")
+substr(al_biruni, 1, 500)
 ```
 
-## 3) Create a Data Frame
+## 3) Building the Corpus (Putting texts together)
 
 Combine Texts
 
-To compare authors, we first place all texts into a single table.
+To compare the authors' works, we created a table that connects each author with their text. After we run this tibble() code, the texts can be analyzed together while keeping track of which words belong to which author.
 
 ```{r}
 texts <- tibble(
@@ -72,29 +72,45 @@ texts <- tibble(
     "Goethe",
     "Humboldt",
     "Somerville",
-    "Ibn Khaldun"
+    "Ibn Khaldun",
+    "Al-Biruni"
   ),
   text = c(
     goethe,
     humboldt,
     somerville,
-    muqaddimah
+    muqaddimah,
+    al_biruni
   )
 )
+texts
 ```
 
 ## 4) Tokenize Texts
 
-Tokenization breaks a text into individual words.
+Tokenization breaks text into smaller units called 'tokens'. Here, each token is a word -\
+For example: 'Nature is a living whole' becomes:\
+nature\
+is\
+a\
+living\
+whole
+
+Breaking the text apart allows R to count and compare individual words. The words(language) are being turned into data that can be counted.
 
 ```{r}
 words <- texts %>%
   unnest_tokens(word, text)
+head(words, 10)
 ```
+
+This is the point where we're really turning the books into analyzable data. unnest_tokens() breaks the text into individual words. And head() simply allows us to look at the first ten rows of the result.
 
 ## 5) Remove Stop Words
 
-Words such as "the", "and", and "of" occur frequently but often add little analytical value.
+Words such as "the", "and", "of", "to" and "in" occur frequently but often add little value for analysis. For this analysis, we remove common stop words so other vocabulary becomes easier to see.\
+\
+This is a researcher decision based on the choice of the texts being studied and the researcher. Removing stop words is a methodological choice. Some common words may matter, depending on the context.
 
 ```{r}
 data("stop_words")
@@ -103,41 +119,98 @@ words_clean <- words %>%
   anti_join(stop_words, by = "word")
 ```
 
-## 6) Count Word Frequencies
-
-This will count the most common words and how often they are used throughout the whole text.
+## 6) Normalize variations of certain words
 
 ```{r}
-top_words <- words_clean %>%
-  count(author, word, sort = TRUE) %>%
-  group_by(author) %>%
-  slice_head(n = 10)
+words_clean <- words_clean %>%
+  mutate(
+    word = case_when(
+      word %in% c(
+        "colour",
+        "colours",
+        "coloured",
+        "color",
+        "colors",
+        "colored"
+      ) ~ "colour",
+      TRUE ~ word
+    )
+  )
 ```
 
-## 7) Visualize recurring themes (images)
-
-This is how we see all of the computational text analysis in action - with images of graphs and charts.
+R doesn't understand that colour, colours, coloured, and the American spelling 'color' are related concepts. To R, they're simply different strings of characters. For my research question, I'm more interested in references to the concept of colour or color, rather than differences between these grammatical forms or spellings. So, I'm telling R to treat these variants as one term: colour. This is called **'normalization'.**
 
 ```{r}
-ggplot(
-  top_words,
-  aes(
+words_clean %>%
+  filter(word == "colour") %>%
+  count(author, word)
+```
+
+## 7) Count Word Frequencies
+
+Which words appear most frequently for each author after stop words are removed?\
+This will count the most common words and how often they are used throughout the whole text. This code groups the words by author, counts them, sorts them, and keeps the ten most frequent. There are 3 lexicons that tidytext uses.
+
+```{r}
+head(stop_words, 10)
+```
+
+```{r}
+words_clean <- words %>%
+  anti_join(stop_words, by = "word")
+
+head(words_clean, 10)
+```
+
+stop_words is an existing list of common words. anti_join() tells R to keep our words except the ones that appear on this stop-word list.
+
+## 8) Turn Counts Into a Visualization
+
+This is how we see all of the text analysis in action - with images of graphs and charts. A table of hundreds of word counts cn be difficult to interpret. A visualization makes some patterns easier to notice.\
+\
+After we run the code, what is noticed before it is interpreted?\
+Some questions to think about are:\
+What words stand out?\
+What seems different between authors?\
+What surprises you?\
+What you you want to investigate further?\
+
+```{r}
+word_counts <- words_clean %>%
+  count(author, word, sort = TRUE)
+
+head(word_counts, 10)
+```
+
+count() counts how often each word appears for each author
+
+```{r}
+top_words <- word_counts %>%
+  group_by(author) %>%
+  slice_max(n, n = 10)
+
+top_words
+```
+
+```{r}
+ggplot(top_words,aes(
     x = reorder(word, n),
     y = n,
     fill = author
-  )
-) +
+  )) +
   geom_col(show.legend = FALSE) +
   coord_flip() +
   facet_wrap(~author, scales = "free")
 ```
 
-## 8) Interpretive Questions over the actual research.
+## 9) Take patterns and go back to the text
 
-Discussion questions:\
+Text analysis can identify patterns, however, a frequency count doesn't discuss what words mean in context.\
+\
+I created questions that I think I would ask or discuss with the texts to continue the inquiry:
 
-1.  Which words dominate each text?
-2.  Are there shared vocabularies among these authors?
-3.  Which authors appear more concerned with nature?
-4.  Which authors appear more concerned with society or history?
-5.  What are the limitations of word-frequency analysis?
+1.  Are there shared vocabularies among these authors?
+2.  Which authors appear more concerned with nature?
+3.  Which authors appear more concerned with society or history?
+4.  What are the limitations of word-frequency analysis?
+5.  How might translations affect patterns?
