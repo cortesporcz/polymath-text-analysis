@@ -6,7 +6,7 @@ editor: visual
 
 ## Introduction
 
-This Quarto notebook introduces basic text analysis workflow using four texts from my Polymath project. I used Project Gutenberg to gather the texts. The goal is not to learn every part of R syntax. Instead, we will follow what happens to a text as it moves through a text analysis workflow. Below are the four texts used:
+This Quarto notebook introduces basic text analysis workflow using five texts from my Polymath project. I used Project Gutenberg to gather the texts. The goal is not to learn every part of R syntax. Instead, we will follow what happens to a text as it moves through a text analysis workflow. Below are the four texts used:
 
 - Johann Wolfgang von Goethe, Theory of Colours
 
@@ -14,8 +14,10 @@ This Quarto notebook introduces basic text analysis workflow using four texts fr
 
 - Mary Somerville, Connexion of the Physical Sciences
 
-- Ibn Khaldun, The Muqaddimah\
-  \
+- Ibn Khaldun, The Muqaddimah
+
+- Al-Biruni, Alberuni's India Vol. 1
+
   To analyze, I followed these steps in order to get the results.\
   \
 
@@ -57,7 +59,7 @@ somerville <- read_file("data_raw/somerville_connexion.txt")
 muqaddimah <- read_file("data_raw/muqaddimah_FINAL.txt")
 
 al_biruni <- read_file("data_raw/al_biruni_india_vol1.txt")
-substr(al_biruni, 1, 500)
+
 ```
 
 ## 3) Building the Corpus (Putting texts together)
@@ -106,7 +108,7 @@ head(words, 10)
 
 This is the point where we're really turning the books into analyzable data. unnest_tokens() breaks the text into individual words. And head() simply allows us to look at the first ten rows of the result.
 
-## 5) Remove Stop Words
+## 5) Examine and Remove Stop Words
 
 Words such as "the", "and", "of", "to" and "in" occur frequently but often add little value for analysis. For this analysis, we remove common stop words so other vocabulary becomes easier to see.\
 \
@@ -115,8 +117,17 @@ This is a researcher decision based on the choice of the texts being studied and
 ```{r}
 data("stop_words")
 
+head(stop_words, 10)
+
+```
+
+stop_words is an existing list of words commonly excluded from some text analyses. Looking at the list first reminds us that removing these words is a methodological decision
+
+```{r}
 words_clean <- words %>%
   anti_join(stop_words, by = "word")
+head(words_clean, 10)
+
 ```
 
 ## 6) Normalize variations of certain words
@@ -146,34 +157,27 @@ words_clean %>%
   count(author, word)
 ```
 
+Remove project-specific noise After inspecting the results, I found tokens such as i.e and 1 that are not meaningful for this analysis. Standard stop-word lists do not necessarily identify every term that may need to be removed from a particular corpus.
+
+```{r}
+custom_stop_words <- c("i.e", "1")
+
+words_clean <- words_clean %>%
+  filter(!word %in% custom_stop_words)
+```
+
+then, I will double check to make sure:
+
+```{r}
+words_clean %>%
+  filter(word %in% custom_stop_words)
+```
+
+it should say '0' rows, or something similar.
+
 ## 7) Count Word Frequencies
 
-Which words appear most frequently for each author after stop words are removed?\
-This will count the most common words and how often they are used throughout the whole text. This code groups the words by author, counts them, sorts them, and keeps the ten most frequent. There are 3 lexicons that tidytext uses.
-
-```{r}
-head(stop_words, 10)
-```
-
-```{r}
-words_clean <- words %>%
-  anti_join(stop_words, by = "word")
-
-head(words_clean, 10)
-```
-
-stop_words is an existing list of common words. anti_join() tells R to keep our words except the ones that appear on this stop-word list.
-
-## 8) Turn Counts Into a Visualization
-
-This is how we see all of the text analysis in action - with images of graphs and charts. A table of hundreds of word counts cn be difficult to interpret. A visualization makes some patterns easier to notice.\
-\
-After we run the code, what is noticed before it is interpreted?\
-Some questions to think about are:\
-What words stand out?\
-What seems different between authors?\
-What surprises you?\
-What you you want to investigate further?\
+Now that the texts have been tokenized, stop words have been removed, and selected word variations have been normalized, we can count how often each word appears for each author. First, we create a table of word counts
 
 ```{r}
 word_counts <- words_clean %>%
@@ -182,7 +186,7 @@ word_counts <- words_clean %>%
 head(word_counts, 10)
 ```
 
-count() counts how often each word appears for each author
+count() counts how often each word appears for each author. Next, we keep the ten most frequent words for each author.
 
 ```{r}
 top_words <- word_counts %>%
@@ -190,7 +194,12 @@ top_words <- word_counts %>%
   slice_max(n, n = 10)
 
 top_words
+
 ```
+
+## 8) Visualize word frequencies
+
+ggplot2 is a visualization package included with the tidyverse. It builds visualizations in layers. In this graph: - top_words is the data we are visualizing - word provides the word labels - n is the number of times each word occurs - geom_col() creates the bars - coord_flip() turns the bars horizontally - facet_wrap() creates a separate panel for each author The + signs add each layer to the visualization.
 
 ```{r}
 ggplot(top_words,aes(
@@ -203,7 +212,9 @@ ggplot(top_words,aes(
   facet_wrap(~author, scales = "free")
 ```
 
-## 9) Take patterns and go back to the text
+What words stand out? What seems different between authors? What surprises you? What would you want to investigate further?
+
+## 9) Return to texts and interpret (with patterns observed)
 
 Text analysis can identify patterns, however, a frequency count doesn't discuss what words mean in context.\
 \
@@ -214,3 +225,6 @@ I created questions that I think I would ask or discuss with the texts to contin
 3.  Which authors appear more concerned with society or history?
 4.  What are the limitations of word-frequency analysis?
 5.  How might translations affect patterns?
+6.  Are unexpected words coming from the author, the translator, the editor, or the digital edition?
+
+For example, we saw words such as al, de, and footnote. Instead of immediately deleting those words, the next step would be to return to the source and investigate why they appear
